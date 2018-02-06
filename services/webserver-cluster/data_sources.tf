@@ -5,14 +5,14 @@ data "aws_availability_zones" "all" {}
 data "terraform_remote_state" "db" {
     backend = "s3"
     config {
-        bucket = "9ide0n-s3-terraform-state"
-        key = "stage/data-stores/mysql/terraform.tfstate"
+        bucket = "${var.db_remote_state_bucket}"
+        key = "${var.db_remote_state_key}"
         region = "us-east-1"
     }
 }
 # create datasource that will return rendered template from file read by function file with vars defined in section map  
 data "template_file" "user_data" {
-    template = "${file("user-data.sh")}"
+    template = "${file("${path.module}/user-data.sh")}"
     vars {
         server_port = "${var.server_port}"
         db_address = "${data.terraform_remote_state.db.address}"

@@ -1,11 +1,7 @@
-provider "aws" {
-    region = "us-east-1"
-}
-
 # instead of instance we use launch_configuration for asg with same params as instance
 resource "aws_launch_configuration" "example" {
     image_id = "ami-41e0b93b"
-    instance_type = "t2.micro"
+    instance_type = "${var.instance_type}"
     security_groups = ["${aws_security_group.instance.id}"]
     # use output of the template_file data sourcre defined in data_sources.tf (rendered with vars user-data.sh)
     user_data = "${data.template_file.user_data.rendered}" 
@@ -26,33 +22,34 @@ resource "aws_autoscaling_group" "example" {
     load_balancers = ["${aws_elb.example.name}"]
     # use ELB healthchecks to auto replace instances if they are dead/unhealthy
     health_check_type = "ELB"
-    min_size = 2
-    max_size = 10
+    min_size = "${var.min_size}"
+    max_size = "${var.max_size}"
     tag {
         key = "Name"
-        value = "terraform-asg-example"
+        value = "${var.cluster_name}-asg"
         propagate_at_launch = true
     }
 }
 
 resource "aws_security_group" "instance" {
-    name = "terraform-aws-launch-configuration-instance"
-
-    ingress {
-        from_port = "${var.server_port}"
-        to_port = "${var.server_port}"
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+    name = "${var.cluster_name}-sg-instance"
 
     lifecycle {
         create_before_destroy = true
     }
+}
 
+resource "aws_security_group_rule" "allow_http_inbound-instance" {
+    type= "ingress"
+    security_group_id = "${aws_security_group.instance.id}"
+    from_port = "${var.server_port}"
+    to_port = "${var.server_port}"
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
 }
 
 resource "aws_elb" "example" {
-    name = "terraform-asg-example"
+    name = "${var.cluster_name}-elb"
     availability_zones = ["${data.aws_availability_zones.all.names}"]
     security_groups = ["${aws_security_group.elb.id}"]
 
@@ -76,20 +73,26 @@ resource "aws_elb" "example" {
 }
 
 resource "aws_security_group" "elb" {
-    name = "terraform-example-elb"
-    # allow incoming http requests to elb
-    ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-    # allow outgoing traffic to allow elb to make healthchecks of balanced instances
-    egress {
-        from_port = 0
-        to_port = 0
-        protocol = "-1"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
+    name = "${var.cluster_name}-sg-elb"
+    # move ingress and egress inline blocks to separate resources so we can redefine them in module caller
 } 
+
+# allow incoming http requests to elb
+resource "aws_security_group_rule" "allow_http_inbound" {
+    type= "ingress"
+    security_group_id = "${aws_security_group.elb.id}"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+}
+
+# allow outgoing traffic to allow elb to make healthchecks of balanced instances
+resource "aws_security_group_rule" "allow_all_outbound" {
+    type = "egress"
+    security_group_id = "${aws_security_group.elb.id}"
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+}
