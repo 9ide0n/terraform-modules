@@ -11,3 +11,7 @@ output "asg_name" {
 output "elb_security_group_id" {
     value = "${aws_security_group.elb.id}" 
 }
+
+output "version" {
+    value = "v0.0.2"
+}
