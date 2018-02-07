@@ -4,7 +4,12 @@ resource "aws_launch_configuration" "example" {
     instance_type = "${var.instance_type}"
     security_groups = ["${aws_security_group.instance.id}"]
     # use output of the template_file data sourcre defined in data_sources.tf (rendered with vars user-data.sh)
-    user_data = "${data.template_file.user_data.rendered}" 
+    # we have 2 data sources, thanks to count in them they are both lists. But 1 will be always list of 1 element,
+    # (count=1) 2nd will be always empty (count=0). concat func take 2 lists and union them - result list will always
+    # be 1 element len, so element func with 2nd param as 0 will always take user_data we need to use
+    user_data = "${element(concat(data.template_file.user_data.*.rendered,
+                                  data.template_file.user_data_new.*.rendered),
+                            0)}"
     # we must sure that instance created by launch_configuration will be successfully created, only then the old-one will be destroyed
     # this attribute should be set to all linked primitives in our case aws_security_group
     lifecycle {
