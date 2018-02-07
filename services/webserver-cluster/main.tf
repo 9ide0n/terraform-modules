@@ -119,3 +119,44 @@ resource "aws_autoscaling_schedule" "scale_in_at_night" {
     recurrence = "0 14 * * *"#14 at UTS, as we are at UTS+3 14+3=17:00
     autoscaling_group_name ="${aws_autoscaling_group.example.name}"
 }
+
+# cloudwatch alarm if cpu uti of cluster will be > 90% during 300sec=5min
+resource "aws_cloudwatch_metric_alarm" "high_cpu_utilization" {
+    alarm_name = "${var.cluster_name}-high-cpu-utilization"
+    namespace = "AWS/EC2"
+    metric_name = "CPUUtilization"
+
+    dimensions = {
+        AutoScalingGroupName = "${aws_autoscaling_group.example.name}"
+    }
+
+    comparison_operator = "GreaterThanThreshold"
+    evaluation_periods = 1 
+    period = 300
+    statistic = "Average"
+    threshold = 90
+    unit = "Percent"
+}
+# cloudwatch alarm which fires when cpucredits < 10% during 5 min. cpu credits only used it t type of
+# instances so we must limit creating this resource only to them. "${var.instance_type}" already supply
+# an instance type to module so if it it "t2.micro" or so we filter it by 1st letter - if it is 't' then 
+# this alarm should be created 
+resource "aws_cloudwatch_metric_alarm" "low_cpu_credit_balance" {
+    count = "${format("%.1s", var.instance_type) == "t" ? 1 : 0}"
+
+    alarm_name = "${var.cluster_name}-low-cpu-credit-balance"
+    namespace = "AWS/EC2"
+    metric_name = "CPUCreditBalance"
+
+    dimensions = {
+        AutoScalingGroupName = "${aws_autoscaling_group.example.name}"
+    }
+
+    comparison_operator = "LessThanThreshold"
+    evaluation_periods = 1
+    period = 300
+    statistic = "Minimum"
+    threshold = 10
+    unit = "Count"
+
+}
