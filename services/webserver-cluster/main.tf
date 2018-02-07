@@ -96,3 +96,26 @@ resource "aws_security_group_rule" "allow_all_outbound" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
 }
+
+# add two asg shedules based on asg name created at module
+# if enable_autoscaling=true then terrafrom treat this as 1 and count=1 will create 1 resource
+# like wo count at all. if enable_autoscaling=false then tf treat this as count=0 so recourse will not
+# be created at all
+resource "aws_autoscaling_schedule" "scale_out_during_business_hours" {
+    count = "${var.enable_autoscaling}"
+    scheduled_action_name = "scale-out-during-business-hours"
+    min_size = 2
+    max_size = 10
+    desired_capacity = 5
+    recurrence = "0 6 * * *" #6 at UTS, as we are at UTS+3 6+3=9:00
+    autoscaling_group_name ="${aws_autoscaling_group.example.name}"
+}
+resource "aws_autoscaling_schedule" "scale_in_at_night" {
+    count = "${var.enable_autoscaling}"
+    scheduled_action_name = "scale-in-at-night"
+    min_size = 2
+    max_size = 10
+    desired_capacity = 2
+    recurrence = "0 14 * * *"#14 at UTS, as we are at UTS+3 14+3=17:00
+    autoscaling_group_name ="${aws_autoscaling_group.example.name}"
+}
