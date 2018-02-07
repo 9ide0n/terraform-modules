@@ -1,6 +1,6 @@
 # instead of instance we use launch_configuration for asg with same params as instance
 resource "aws_launch_configuration" "example" {
-    image_id = "ami-41e0b93b"
+    image_id = "${var.ami}"
     instance_type = "${var.instance_type}"
     security_groups = ["${aws_security_group.instance.id}"]
     # use output of the template_file data sourcre defined in data_sources.tf (rendered with vars user-data.sh)
@@ -15,6 +15,13 @@ resource "aws_launch_configuration" "example" {
 
 
 resource "aws_autoscaling_group" "example" {
+    # add name with link launch_configuration name to allow the name of asg
+    # change every time we change lc (change ami, user_data) - with new name 
+    # asg will be marked to delete/create again - 1st thing what we need to achieve 
+    # zero-time deployment - if we not recreating the asg it will not recreate its instances
+    # so update will be anaviable until we manually delete/create asg or instances or asg scaling 
+    # rules will be in place
+    name = "${var.cluster_name}-${aws_launch_configuration.example.name}"
     launch_configuration = "${aws_launch_configuration.example.id}"
     # allow asg to work with all AZs we get from AWS with data_source call
     availability_zones = ["${data.aws_availability_zones.all.names}"]
@@ -24,6 +31,15 @@ resource "aws_autoscaling_group" "example" {
     health_check_type = "ELB"
     min_size = "${var.min_size}"
     max_size = "${var.max_size}"
+    # at least so many instances of new asg must be registered in ELB before old ASG and ELB links will be deleted
+    min_elb_capacity = "${var.min_size}"
+    # our asg with new instances with updated ami/user_data must be created first, register them in ELB
+    #  and if all is ok - only then remove old ASG, its instances and ELB links - 2nd thing we need to achieve
+    # to have zero-time deployment
+    lifecycle {
+        create_before_destroy = true
+    }
+
     tag {
         key = "Name"
         value = "${var.cluster_name}-asg"
@@ -69,11 +85,19 @@ resource "aws_elb" "example" {
         # check health by sending HTTP GET request to / uri
         target = "HTTP:${var.server_port}/"
     }
+    # need to put here as this resource are dependent on ASG marked by this modificator
+    lifecycle {
+        create_before_destroy = true
+    }
 
 }
 
 resource "aws_security_group" "elb" {
     name = "${var.cluster_name}-sg-elb"
+    # need to put here as this resource are dependent on ASG marked by this modificator
+    lifecycle {
+        create_before_destroy = true
+    }
     # move ingress and egress inline blocks to separate resources so we can redefine them in module caller
 } 
 
