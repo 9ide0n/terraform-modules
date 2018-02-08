@@ -131,7 +131,7 @@ resource "aws_autoscaling_schedule" "scale_out_during_business_hours" {
     min_size = 2
     max_size = 10
     desired_capacity = 5
-    recurrence = "0 6 * * *" #6 at UTS, as we are at UTS+3 6+3=9:00
+    recurrence = "0-59 6-14 * * *" #6 at UTS, as we are at UTS+3 6+3=9:00
     autoscaling_group_name ="${aws_autoscaling_group.example.name}"
 }
 resource "aws_autoscaling_schedule" "scale_in_at_night" {
@@ -140,7 +140,7 @@ resource "aws_autoscaling_schedule" "scale_in_at_night" {
     min_size = 2
     max_size = 10
     desired_capacity = 2
-    recurrence = "0 14 * * *"#14 at UTS, as we are at UTS+3 14+3=17:00
+    recurrence = "0-59 14-6 * * *"#14 at UTS, as we are at UTS+3 14+3=17:00
     autoscaling_group_name ="${aws_autoscaling_group.example.name}"
 }
 
