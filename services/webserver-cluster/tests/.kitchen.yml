@@ -1,0 +1,20 @@
+driver:
+  name: terraform
+
+provisioner:
+  name: terraform
+
+# transport:
+#   name: ssh
+#   ssh_key: ./tests/id_rsa
+
+verifier:
+  name: shell
+  command: ./integration_test.sh
+  # sleep: 60
+
+platforms:
+  - name: ubuntu
+
+suites:
+  - name: default

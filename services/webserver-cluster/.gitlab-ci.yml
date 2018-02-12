@@ -1,0 +1,10 @@
+image: registry.gitlab.com/9ide0n/terraform-modules/alpine-terraform-kitchen-tests
+
+
+test:
+  script:
+    - cd tests
+    - bundle install
+    - bundle exec kitchen converge
+    - bundle exec kitchen verify
+    - bundle exec kitchen destroy

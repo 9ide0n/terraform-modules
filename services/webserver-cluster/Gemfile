@@ -1,0 +1,7 @@
+source 'https://rubygems.org/'
+# ruby '2.3.1'
+gem 'test-kitchen'
+# gem 'kitchen-terraform'
+# gem 'io-console'
+gem 'kitchen-terraform', :github => 'newcontext-oss/kitchen-terraform'
+# gem 'inspec-aws', :github => 'pburkholder/inspec-aws'#, :branch => "example_fix "
