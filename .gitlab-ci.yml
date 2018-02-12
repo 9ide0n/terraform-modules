@@ -1,10 +1,18 @@
 image: registry.gitlab.com/9ide0n/terraform-modules/alpine-terraform-kitchen-tests
 
+before_script:
+  - cd services/webserver-cluster/tests
 
-test:
+run_integration_tests:
+  stage: "init"
   script:
-    - cd services/webserver-cluster/tests
     - bundle install
+  stage: "apply"
+  script:
     - bundle exec kitchen converge
+  stage: "test"
+  script:
     - bundle exec kitchen verify
+  stage: "destroy"
+  script:
     - bundle exec kitchen destroy
