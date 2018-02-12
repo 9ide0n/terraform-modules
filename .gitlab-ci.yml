@@ -3,7 +3,7 @@ image: registry.gitlab.com/9ide0n/terraform-modules/alpine-terraform-kitchen-tes
 
 test:
   script:
-    - cd tests
+    - cd services/webserver-cluster/tests
     - bundle install
     - bundle exec kitchen converge
     - bundle exec kitchen verify
