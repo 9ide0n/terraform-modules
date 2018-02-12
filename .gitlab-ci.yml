@@ -25,6 +25,9 @@ kitchen_verify:
     - kitchen_init_and_converge
   script:
     - bundle exec kitchen verify
+    artifacts: 
+      paths:
+        - services/webserver-cluster/tests/.kitchen/
 kitchen_destroy:
   stage: destroy
   dependencies:
