@@ -5,7 +5,7 @@ hostname=$(terraform output app_endpoint)
 
 output=$(curl "http://$hostname")
 
-if [[ $output == *"Hello, World1"* ]]; then
+if [[ $output == *"Hello, World"* ]]; then
     echo "***Integration test passed!!!***"
     exit 0
 else
