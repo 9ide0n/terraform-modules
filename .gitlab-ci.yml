@@ -13,17 +13,11 @@ kitchen_init_and_converge:
   script:
     - bundle install
     - bundle exec kitchen converge
-  artifacts:
+  artifacts: 
     paths:
-<<<<<<< HEAD
       - tests/.kitchen/
       - tests/.terraform/
       - tests/terraform.tfstate.d/
-=======
-      - .kitchen/
-      - .terraform/
-      - terraform.tfstate.d/
->>>>>>> 99fd2738f7dcf4d740e6e5100353b508bfdefe38
     when: on_success
 kitchen_verify:
   stage: verify
