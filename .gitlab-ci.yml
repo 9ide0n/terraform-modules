@@ -1,11 +1,34 @@
 image: registry.gitlab.com/9ide0n/terraform-modules/alpine-terraform-kitchen-tests
 
+stages:
+  - converge
+  - verify
+  - destroy
 
-test_module:
+before_script:
+  - cd services/webserver-cluster/tests
+
+kitchen_init_and_converge:
+  stage: converge
   script:
-    - cd services/webserver-cluster/tests
     - bundle install
     - bundle exec kitchen converge
+  artifacts:
+    paths:
+      - .kitchen/
+      - .terraform/
+      - terraform.tfstate.d/
+    when: on_success
+kitchen_verify:
+  stage: verify
+  dependencies:
+    - kitchen_init_and_converge
+  script:
     - bundle exec kitchen verify
+kitchen_destroy:
+  stage: destroy
+  dependencies:
+    - kitchen_init_and_converge
+  when: always
+  script:
     - bundle exec kitchen destroy
-
