@@ -28,6 +28,7 @@ kitchen_verify:
   artifacts: 
     paths:
       - services/webserver-cluster/tests/.kitchen/
+    when: on_failure
 kitchen_destroy:
   stage: destroy
   dependencies:
