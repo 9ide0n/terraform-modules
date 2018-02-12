@@ -15,9 +15,9 @@ kitchen_init_and_converge:
     - bundle exec kitchen converge
   artifacts: 
     paths:
-      - tests/.kitchen/
-      - tests/.terraform/
-      - tests/terraform.tfstate.d/
+      - services/webserver-cluster/tests/.kitchen/
+      - services/webserver-cluster/tests/.terraform/
+      - services/webserver-cluster/tests/terraform.tfstate.d/
     when: on_success
 kitchen_verify:
   stage: verify
