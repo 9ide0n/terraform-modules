@@ -3,7 +3,7 @@ image: registry.gitlab.com/9ide0n/terraform-modules/alpine-terraform-kitchen-tes
 before_script:
   - cd services/webserver-cluster/tests
 
-run_integration_tests:
+init:
   script:
     - bundle install
 apply:
